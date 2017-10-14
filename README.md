@@ -2,7 +2,7 @@
 
 ## Synopsis
 
-This is simple Mandelbrod Drawing App using [angular](https://angular.io/) to a tiny extend. The (default) color scheme is Black and white only and behaves something like [this](https://tinyurl.com/y7bb4tyg)
+This is simple Mandelbrod Drawing App using [angular](https://angular.io/) (to a tiny extend). The (default) color scheme is black and white only and behaves something like [this](https://tinyurl.com/y7bb4tyg)
 
 ## Installation & Running the App
 
