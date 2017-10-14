@@ -115,10 +115,10 @@ export class DrawAreaComponent implements OnInit {
     let buf = new ArrayBuffer(imageData.data.length);
     let buf8 = new Uint8ClampedArray(buf);
     let data = new Uint32Array(buf);
-    let dataset = this.d3.range(CANVAS_HEIGHT).map((d, i) => this.d3.range(CANVAS_WIDTH).map(() => 255));
 
-    for (let y = 0; y < CANVAS_HEIGHT; ++y) {
-      for (let x = 0; x < CANVAS_WIDTH; ++x) {
+    this.d3.range(CANVAS_HEIGHT)
+      .map((d0, y) => this.d3.range(CANVAS_WIDTH)
+      .map((d1, x) => {
         let z = this.pixelToMath({x: x, y: y});
         let value = DrawAreaComponent.isInMbMaybe(z, iterations, colorFct);
         data[y * CANVAS_WIDTH + x] = 
@@ -126,9 +126,8 @@ export class DrawAreaComponent implements OnInit {
           (value << 16) |     // blue
           (value << 8) |      // green
           value;              // red
-      }
-    }
-
+      }));
+    
     imageData.data.set(buf8);
     ctx.putImageData(imageData, 0, 0);  
   }
