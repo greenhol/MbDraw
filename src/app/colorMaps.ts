@@ -1,4 +1,4 @@
-export type ColorFct = (value: number, iterations: number) => any;
+export type ColorFct = (value: number, iterations: number) => number;
 
 export function mapToSqrtColorValue(value: number, iterations: number): number {
     return Math.sqrt(iterations*value)*256/iterations;
