@@ -13,18 +13,28 @@ interface Complex {
   imag: number;
 }
 
+interface Config {
+  zStart: Complex;
+  zEnd: Complex;
+  zoomLevel: number;
+}
+
 interface Coordinate {
   x: number;
   y: number;
 }
 
-const CANVAS_WIDTH = 1350;
+// const CANVAS_WIDTH = 9600;
+// const CANVAS_HEIGHT = 5400;
+// const CANVAS_WIDTH = 1920;
+// const CANVAS_HEIGHT = 1080;
+const CANVAS_WIDTH = 1600;
 const CANVAS_HEIGHT = 900;
 const ZOOM_PERCENTAGE = 0.5;
-const REAL_RANGE1 = -2.2;
-const REAL_RANGE2 = 0.8;
-const IMAG_RANGE1 = -1;
-const IMAG_RANGE2 = 1;
+const REAL_RANGE1 = -3;
+const REAL_RANGE2 = 1.8;
+const IMAG_RANGE1 = -1.35;
+const IMAG_RANGE2 = 1.35;
 
 @Component({
   selector: 'mb-draw-area',
@@ -78,21 +88,37 @@ export class DrawAreaComponent implements OnInit {
 
   @HostListener('pointerup', ['$event'])
   public pointerup(event: PointerEvent) {
-    this.panZoom({
-      x: event.offsetX,
-      y: event.offsetY
-    }, 1);
+    // only left button
+    if (event.button === 0) {
+      this.panZoom({
+        x: event.offsetX,
+        y: event.offsetY
+      }, 1);
+    } else if (event.button === 1) {
+      window.location.href = '/';
+    }
   }
 
   constructor(private element: ElementRef, d3Service: D3Service) {
     this.d3 = d3Service.getD3();
-    this.setPlane({
-      real: REAL_RANGE1,
-      imag: IMAG_RANGE1
-    }, {
-      real: REAL_RANGE2,
-      imag: IMAG_RANGE2
-    });
+    let initialConfig: Config;
+    try {
+      initialConfig = JSON.parse(window.location.hash.substr(1));
+    } catch (error) {
+      initialConfig = {
+        zStart: {
+          real: REAL_RANGE1,
+          imag: IMAG_RANGE1
+        },
+        zEnd: {
+          real: REAL_RANGE2,
+          imag: IMAG_RANGE2
+        },
+        zoomLevel: 1
+      };
+    }
+    this.zoomLevel = initialConfig.zoomLevel;    
+    this.setPlane(initialConfig.zStart, initialConfig.zEnd);
   }
 
   ngOnInit() {
@@ -154,6 +180,16 @@ export class DrawAreaComponent implements OnInit {
       real: zEnd.real - zStart.real,
       imag: zEnd.imag - zStart.imag
     }
+    this.setConfig();
+  }
+
+  private setConfig() {
+    const newConfig: Config = {
+      zStart: this.zStart,
+      zEnd: this.zEnd,
+      zoomLevel: this.zoomLevel
+    }
+    window.location.hash = JSON.stringify(newConfig);
   }
 
   private pixelToMath(coordinate: Coordinate): Complex {
