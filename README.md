@@ -16,7 +16,7 @@ This is simple Mandelbrod Drawing App using [angular](https://angular.io/) (to a
 
 Some simple rules:
 1. Mousewheel Up zoomes in
-2. Mousewheel Down zoomes down
+2. Mousewheel Down zoomes out
 3. Mouseclick centeres
 4. For own implemenataions of coloring check `colorMaps.ts`
 5. Have fun!
