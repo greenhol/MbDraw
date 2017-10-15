@@ -1,5 +1,4 @@
-import { Component, ViewEncapsulation, OnInit, ElementRef, HostListener } from '@angular/core';
-import { D3Service, D3, Selection } from 'd3-ng2-service';
+import { Component, ViewEncapsulation, OnInit, ElementRef, HostListener, ViewChild } from '@angular/core';
 import {
   ColorFct,
   mapToLinearColorValue,
@@ -26,10 +25,12 @@ interface Coordinate {
 
 // const CANVAS_WIDTH = 9600;
 // const CANVAS_HEIGHT = 5400;
+// const CANVAS_WIDTH = 4800;
+// const CANVAS_HEIGHT = 2700;
 // const CANVAS_WIDTH = 1920;
 // const CANVAS_HEIGHT = 1080;
-const CANVAS_WIDTH = 1600;
-const CANVAS_HEIGHT = 900;
+const CANVAS_WIDTH = 1280;
+const CANVAS_HEIGHT = 720;
 const ZOOM_PERCENTAGE = 0.5;
 const REAL_RANGE1 = -3;
 const REAL_RANGE2 = 1.8;
@@ -38,19 +39,18 @@ const IMAG_RANGE2 = 1.35;
 
 @Component({
   selector: 'mb-draw-area',
-  template: ``,
+  template: `<canvas class="canvasArea" #canvasArea></canvas>`,
   styleUrls: ['./draw-area.component.scss'],
   encapsulation: ViewEncapsulation.None
 })
 export class DrawAreaComponent implements OnInit {
 
-  private d3: D3;
-  private canvas: any;
-
   private zStart: Complex;
   private zEnd: Complex;
   private zRange: Complex;
   private zoomLevel = 1;
+
+  @ViewChild('canvasArea') private canvasArea;
 
   private static isInMbMaybe(z: Complex, iterations: number, colorFct: ColorFct): number {
 
@@ -99,10 +99,10 @@ export class DrawAreaComponent implements OnInit {
     }
   }
 
-  constructor(private element: ElementRef, d3Service: D3Service) {
-    this.d3 = d3Service.getD3();
+  constructor(private element: ElementRef) {
     let initialConfig: Config;
     try {
+      debugger;
       initialConfig = JSON.parse(window.location.hash.substr(1));
     } catch (error) {
       initialConfig = {
@@ -122,18 +122,13 @@ export class DrawAreaComponent implements OnInit {
   }
 
   ngOnInit() {
-    this.canvas = this.d3.select(this.element.nativeElement)
-      .append('canvas')
-      .classed('canvasArea', true)
-      .attr('width', CANVAS_WIDTH)
-      .attr('height', CANVAS_HEIGHT)
-      .node();
-
+    this.canvasArea.nativeElement.width = CANVAS_WIDTH;
+    this.canvasArea.nativeElement.height = CANVAS_HEIGHT;
     this.calcAndDraw();
   }
 
   private calcAndDraw() {
-    const ctx = this.canvas.getContext('2d');
+    const ctx = this.canvasArea.nativeElement.getContext('2d');
     const imageData = ctx.getImageData(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
     const iterations = (this.zoomLevel < 2) ? 255 : 255 + this.zoomLevel * 32;
     const colorFct = (iterations < 300) ? mapToLinearColorValue : mapToSmoothPeriodicValue;    
@@ -142,9 +137,8 @@ export class DrawAreaComponent implements OnInit {
     let buf8 = new Uint8ClampedArray(buf);
     let data = new Uint32Array(buf);
 
-    this.d3.range(CANVAS_HEIGHT)
-      .map((d0, y) => this.d3.range(CANVAS_WIDTH)
-      .map((d1, x) => {
+    for (let y = 0; y < CANVAS_HEIGHT; y++) {
+      for (let x = 0; x < CANVAS_WIDTH; x++) {
         let z = this.pixelToMath({x: x, y: y});
         let value = DrawAreaComponent.isInMbMaybe(z, iterations, colorFct);
         data[y * CANVAS_WIDTH + x] = 
@@ -152,8 +146,9 @@ export class DrawAreaComponent implements OnInit {
           (value << 16) |     // blue
           (value << 8) |      // green
           value;              // red
-      }));
-    
+      }
+    }
+
     imageData.data.set(buf8);
     ctx.putImageData(imageData, 0, 0);  
   }
