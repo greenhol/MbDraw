@@ -25,12 +25,19 @@ interface Coordinate {
 
 // const CANVAS_WIDTH = 9600;
 // const CANVAS_HEIGHT = 5400;
+
 // const CANVAS_WIDTH = 4800;
 // const CANVAS_HEIGHT = 2700;
+
+// const CANVAS_WIDTH = 3360;
+// const CANVAS_HEIGHT = 1890;
+
 // const CANVAS_WIDTH = 1920;
 // const CANVAS_HEIGHT = 1080;
+
 const CANVAS_WIDTH = 1280;
 const CANVAS_HEIGHT = 720;
+
 const ZOOM_PERCENTAGE = 0.5;
 const REAL_RANGE1 = -3;
 const REAL_RANGE2 = 1.8;
@@ -39,7 +46,11 @@ const IMAG_RANGE2 = 1.35;
 
 @Component({
   selector: 'mb-draw-area',
-  template: `<canvas class="canvasArea" #canvasArea></canvas>`,
+  template: `<canvas class="canvasArea"
+                     #canvasArea
+                     (mousewheel)="onMouseWheelChrome($event)"
+                     (pointerup)="onPointerup($event)">
+    </canvas>`,
   styleUrls: ['./draw-area.component.scss'],
   encapsulation: ViewEncapsulation.None
 })
@@ -76,7 +87,7 @@ export class DrawAreaComponent implements OnInit {
     return colorFct(0, iterations);
   }
 
-  @HostListener('mousewheel', ['$event']) onMouseWheelChrome(event: any) {
+  public onMouseWheelChrome(event: any) {
     const zoomIn = (event.deltaY < 0);
     const factor = zoomIn ? ZOOM_PERCENTAGE : 1 / ZOOM_PERCENTAGE;
     this.zoomLevel = zoomIn ? this.zoomLevel+1 : this.zoomLevel-1;
@@ -86,8 +97,7 @@ export class DrawAreaComponent implements OnInit {
     }, factor);
   }
 
-  @HostListener('pointerup', ['$event'])
-  public pointerup(event: PointerEvent) {
+  public onPointerup(event: PointerEvent) {
     // only left button
     if (event.button === 0) {
       this.panZoom({
@@ -102,7 +112,6 @@ export class DrawAreaComponent implements OnInit {
   constructor(private element: ElementRef) {
     let initialConfig: Config;
     try {
-      debugger;
       initialConfig = JSON.parse(window.location.hash.substr(1));
     } catch (error) {
       initialConfig = {
