@@ -1,4 +1,5 @@
 import { Component, ViewEncapsulation, OnInit, ElementRef, HostListener, ViewChild } from '@angular/core';
+import { saveAs } from 'file-saver';
 import {
   ColorFct,
   mapToLinearColorValue,
@@ -23,6 +24,13 @@ interface Coordinate {
   y: number;
 }
 
+// WIIIIIDE
+// const CANVAS_WIDTH = 1920;
+// const CANVAS_HEIGHT = 360;
+// const REAL_RANGE1 = -10;
+// const REAL_RANGE2 = 4.4;
+
+
 // const CANVAS_WIDTH = 9600;
 // const CANVAS_HEIGHT = 5400;
 
@@ -46,20 +54,14 @@ const IMAG_RANGE2 = 1.35;
 
 @Component({
   selector: 'mb-draw-area',
-  template: `<canvas class="canvasArea"
-                     #canvasArea
-                     (mousewheel)="onMouseWheelChrome($event)"
-                     (pointerup)="onPointerup($event)">
-    </canvas>`,
+  templateUrl: './draw-area-component.html',
   styleUrls: ['./draw-area.component.scss'],
   encapsulation: ViewEncapsulation.None
 })
 export class DrawAreaComponent implements OnInit {
 
-  private zStart: Complex;
-  private zEnd: Complex;
+  private config: Config;
   private zRange: Complex;
-  private zoomLevel = 1;
 
   @ViewChild('canvasArea') private canvasArea;
 
@@ -90,23 +92,32 @@ export class DrawAreaComponent implements OnInit {
   public onMouseWheelChrome(event: any) {
     const zoomIn = (event.deltaY < 0);
     const factor = zoomIn ? ZOOM_PERCENTAGE : 1 / ZOOM_PERCENTAGE;
-    this.zoomLevel = zoomIn ? this.zoomLevel+1 : this.zoomLevel-1;
-    this.panZoom({
-      x: event.offsetX,
-      y: event.offsetY
-    }, factor);
+    const newZoomLevel = zoomIn ? this.config.zoomLevel+1 : this.config.zoomLevel-1;
+    this.panZoom({ x: event.offsetX, y: event.offsetY }, factor, newZoomLevel);
   }
 
   public onPointerup(event: PointerEvent) {
     // only left button
     if (event.button === 0) {
-      this.panZoom({
-        x: event.offsetX,
-        y: event.offsetY
-      }, 1);
+      this.panZoom({ x: event.offsetX, y: event.offsetY }, 1, this.config.zoomLevel);
     } else if (event.button === 1) {
       window.location.href = '/';
     }
+  }
+
+  public onSaveButtonClick() {
+    this.canvasArea.nativeElement.toBlob((blob) => {
+      console.log(this.config);
+      const filename = 'MB_zStart_r_' + this.config.zStart.real
+        + '_i_' + this.config.zStart.imag
+        + '_zEnd_r_' + this.config.zEnd.real
+        + '_i_' + this.config.zEnd.imag
+        + '_zoomLevel_' + this.config.zoomLevel
+        + '.png';
+
+      console.log('Saving as: ' + filename);
+      saveAs(blob, filename);
+    });
   }
 
   constructor(private element: ElementRef) {
@@ -126,8 +137,7 @@ export class DrawAreaComponent implements OnInit {
         zoomLevel: 1
       };
     }
-    this.zoomLevel = initialConfig.zoomLevel;    
-    this.setPlane(initialConfig.zStart, initialConfig.zEnd);
+    this.setPlane(initialConfig.zStart, initialConfig.zEnd, initialConfig.zoomLevel);
   }
 
   ngOnInit() {
@@ -139,7 +149,7 @@ export class DrawAreaComponent implements OnInit {
   private calcAndDraw() {
     const ctx = this.canvasArea.nativeElement.getContext('2d');
     const imageData = ctx.getImageData(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
-    const iterations = (this.zoomLevel < 2) ? 255 : 255 + this.zoomLevel * 32;
+    const iterations = (this.config.zoomLevel < 2) ? 255 : 255 + this.config.zoomLevel * 32;
     const colorFct = (iterations < 300) ? mapToLinearColorValue : mapToSmoothPeriodicValue;    
 
     let buf = new ArrayBuffer(imageData.data.length);
@@ -162,7 +172,7 @@ export class DrawAreaComponent implements OnInit {
     ctx.putImageData(imageData, 0, 0);  
   }
 
-  private panZoom(center: Coordinate, factor: number) {
+  private panZoom(center: Coordinate, factor: number, zoomLevel: number) {
     const diffX = factor * CANVAS_WIDTH / 2;
     const diffY = factor * CANVAS_HEIGHT / 2;
     const coord1: Coordinate = {
@@ -173,13 +183,16 @@ export class DrawAreaComponent implements OnInit {
       x: center.x + diffX,
       y: center.y - diffY
     };
-    this.setPlane(this.pixelToMath(coord1), this.pixelToMath(coord2));
+    this.setPlane(this.pixelToMath(coord1), this.pixelToMath(coord2), zoomLevel);
     this.calcAndDraw();
   }
 
-  private setPlane(zStart: Complex, zEnd: Complex) {
-    this.zStart = zStart;
-    this.zEnd = zEnd;
+  private setPlane(zStart: Complex, zEnd: Complex, zoomLevel: number) {
+    this.config =  {
+      zStart: zStart,
+      zEnd: zEnd,
+      zoomLevel: zoomLevel
+    }
     this.zRange = {
       real: zEnd.real - zStart.real,
       imag: zEnd.imag - zStart.imag
@@ -189,17 +202,17 @@ export class DrawAreaComponent implements OnInit {
 
   private setConfig() {
     const newConfig: Config = {
-      zStart: this.zStart,
-      zEnd: this.zEnd,
-      zoomLevel: this.zoomLevel
+      zStart: this.config.zStart,
+      zEnd: this.config.zEnd,
+      zoomLevel: this.config.zoomLevel
     }
     window.location.hash = JSON.stringify(newConfig);
   }
 
   private pixelToMath(coordinate: Coordinate): Complex {
     return {
-      real: this.zRange.real * coordinate.x / CANVAS_WIDTH + this.zStart.real,
-      imag: this.zEnd.imag - this.zRange.imag * coordinate.y / CANVAS_HEIGHT
+      real: this.zRange.real * coordinate.x / CANVAS_WIDTH + this.config.zStart.real,
+      imag: this.config.zEnd.imag - this.zRange.imag * coordinate.y / CANVAS_HEIGHT
     }
   }
 }
