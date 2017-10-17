@@ -7,8 +7,9 @@ import {
   mapToSmoothValue,
   mapToSmoothPeriodicValue
 } from '../colorMaps';
+import { Dimension, DIMENSIONS, Resolution } from './../dimensions';
 
-interface Complex {
+export interface Complex {
   real: number;
   imag: number;
 }
@@ -24,33 +25,7 @@ interface Coordinate {
   y: number;
 }
 
-// WIIIIIDE
-// const CANVAS_WIDTH = 1920;
-// const CANVAS_HEIGHT = 360;
-// const REAL_RANGE1 = -10;
-// const REAL_RANGE2 = 4.4;
-
-
-// const CANVAS_WIDTH = 9600;
-// const CANVAS_HEIGHT = 5400;
-
-// const CANVAS_WIDTH = 4800;
-// const CANVAS_HEIGHT = 2700;
-
-// const CANVAS_WIDTH = 3360;
-// const CANVAS_HEIGHT = 1890;
-
-// const CANVAS_WIDTH = 1920;
-// const CANVAS_HEIGHT = 1080;
-
-const CANVAS_WIDTH = 1280;
-const CANVAS_HEIGHT = 720;
-
 const ZOOM_PERCENTAGE = 0.5;
-const REAL_RANGE1 = -3;
-const REAL_RANGE2 = 1.8;
-const IMAG_RANGE1 = -1.35;
-const IMAG_RANGE2 = 1.35;
 
 @Component({
   selector: 'mb-draw-area',
@@ -60,6 +35,8 @@ const IMAG_RANGE2 = 1.35;
 })
 export class DrawAreaComponent implements OnInit {
 
+  private readonly RES: Resolution = DIMENSIONS._16x9;
+  private readonly DIM: Dimension = this.RES.s;
   private config: Config;
   private zRange: Complex;
 
@@ -126,14 +103,8 @@ export class DrawAreaComponent implements OnInit {
       initialConfig = JSON.parse(window.location.hash.substr(1));
     } catch (error) {
       initialConfig = {
-        zStart: {
-          real: REAL_RANGE1,
-          imag: IMAG_RANGE1
-        },
-        zEnd: {
-          real: REAL_RANGE2,
-          imag: IMAG_RANGE2
-        },
+        zStart: this.RES.zStart,
+        zEnd: this.RES.zEnd,
         zoomLevel: 1
       };
     }
@@ -141,14 +112,14 @@ export class DrawAreaComponent implements OnInit {
   }
 
   ngOnInit() {
-    this.canvasArea.nativeElement.width = CANVAS_WIDTH;
-    this.canvasArea.nativeElement.height = CANVAS_HEIGHT;
+    this.canvasArea.nativeElement.width = this.DIM.width;
+    this.canvasArea.nativeElement.height = this.DIM.height;
     this.calcAndDraw();
   }
 
   private calcAndDraw() {
     const ctx = this.canvasArea.nativeElement.getContext('2d');
-    const imageData = ctx.getImageData(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+    const imageData = ctx.getImageData(0, 0, this.DIM.width, this.DIM.height);
     const iterations = (this.config.zoomLevel < 2) ? 255 : 255 + this.config.zoomLevel * 32;
     const colorFct = (iterations < 300) ? mapToLinearColorValue : mapToSmoothPeriodicValue;    
 
@@ -156,11 +127,11 @@ export class DrawAreaComponent implements OnInit {
     let buf8 = new Uint8ClampedArray(buf);
     let data = new Uint32Array(buf);
 
-    for (let y = 0; y < CANVAS_HEIGHT; y++) {
-      for (let x = 0; x < CANVAS_WIDTH; x++) {
+    for (let y = 0; y < this.DIM.height; y++) {
+      for (let x = 0; x < this.DIM.width; x++) {
         let z = this.pixelToMath({x: x, y: y});
         let value = DrawAreaComponent.isInMbMaybe(z, iterations, colorFct);
-        data[y * CANVAS_WIDTH + x] = 
+        data[y * this.DIM.width + x] = 
           (255 << 24) |       // alpha
           (value << 16) |     // blue
           (value << 8) |      // green
@@ -173,8 +144,8 @@ export class DrawAreaComponent implements OnInit {
   }
 
   private panZoom(center: Coordinate, factor: number, zoomLevel: number) {
-    const diffX = factor * CANVAS_WIDTH / 2;
-    const diffY = factor * CANVAS_HEIGHT / 2;
+    const diffX = factor * this.DIM.width / 2;
+    const diffY = factor * this.DIM.height / 2;
     const coord1: Coordinate = {
       x: center.x - diffX,
       y: center.y + diffY
@@ -211,8 +182,8 @@ export class DrawAreaComponent implements OnInit {
 
   private pixelToMath(coordinate: Coordinate): Complex {
     return {
-      real: this.zRange.real * coordinate.x / CANVAS_WIDTH + this.config.zStart.real,
-      imag: this.config.zEnd.imag - this.zRange.imag * coordinate.y / CANVAS_HEIGHT
+      real: this.zRange.real * coordinate.x / this.DIM.width + this.config.zStart.real,
+      imag: this.config.zEnd.imag - this.zRange.imag * coordinate.y / this.DIM.height
     }
   }
 }
