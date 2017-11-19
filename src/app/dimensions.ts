@@ -49,5 +49,6 @@ export const DIMENSIONS: Ratio = {
         s: { width: 3840, height: 800 },
         m: { width: 5760, height: 1200 },
         l: { width: 11520, height: 2400 },
+        xl: { width: 17280, height: 3600 }
     }
 }

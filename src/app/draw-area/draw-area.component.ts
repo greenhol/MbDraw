@@ -3,9 +3,10 @@ import { saveAs } from 'file-saver';
 import {
   ColorFct,
   mapToLinearColorValue,
-  mapToSqrtColorValue,
-  mapToSmoothValue,
-  mapToSmoothPeriodicValue
+  mapToSmoothPeriodicValue,
+  mapToColoredValue,
+  mapToColoredValueEvenBetter,
+  Color
 } from '../colorMaps';
 import { Dimension, DIMENSIONS, Resolution } from './../dimensions';
 
@@ -35,14 +36,14 @@ const ZOOM_PERCENTAGE = 0.5;
 })
 export class DrawAreaComponent implements OnInit {
 
-  private readonly RES: Resolution = DIMENSIONS._16x9;
+  private readonly RES: Resolution = DIMENSIONS._16x10;
   private readonly DIM: Dimension = this.RES.s;
   private config: Config;
   private zRange: Complex;
 
   @ViewChild('canvasArea') private canvasArea;
 
-  private static isInMbMaybe(z: Complex, iterations: number, colorFct: ColorFct): number {
+  private static isInMbMaybe(z: Complex, iterations: number, colorFct: ColorFct): Color {
 
     let z0r = z.real;
     let z0i = z.imag;
@@ -84,7 +85,6 @@ export class DrawAreaComponent implements OnInit {
 
   public onSaveButtonClick() {
     this.canvasArea.nativeElement.toBlob((blob) => {
-      console.log(this.config);
       const filename = 'MB_zStart_r_' + this.config.zStart.real
         + '_i_' + this.config.zStart.imag
         + '_zEnd_r_' + this.config.zEnd.real
@@ -92,7 +92,7 @@ export class DrawAreaComponent implements OnInit {
         + '_zoomLevel_' + this.config.zoomLevel
         + '.png';
 
-      console.log('Saving as: ' + filename);
+      console.info('Saving as: ' + filename);
       saveAs(blob, filename);
     });
   }
@@ -121,21 +121,29 @@ export class DrawAreaComponent implements OnInit {
     const ctx = this.canvasArea.nativeElement.getContext('2d');
     const imageData = ctx.getImageData(0, 0, this.DIM.width, this.DIM.height);
     const iterations = (this.config.zoomLevel < 2) ? 255 : 255 + this.config.zoomLevel * 32;
-    const colorFct = (iterations < 300) ? mapToLinearColorValue : mapToSmoothPeriodicValue;    
+    const colorFct = (iterations < 300) ? mapToLinearColorValue : mapToSmoothPeriodicValue;
+    // const colorFct = mapToColoredValueEvenBetter;    
 
     let buf = new ArrayBuffer(imageData.data.length);
     let buf8 = new Uint8ClampedArray(buf);
     let data = new Uint32Array(buf);
+    let rowCnt = 0;
 
+    console.clear();
     for (let y = 0; y < this.DIM.height; y++) {
+      if (rowCnt > 99) {
+        console.info('calculating: ' + Math.round(100*y/this.DIM.height) + '%');
+        rowCnt = 0;
+      }
+      rowCnt++;      
       for (let x = 0; x < this.DIM.width; x++) {
         let z = this.pixelToMath({x: x, y: y});
         let value = DrawAreaComponent.isInMbMaybe(z, iterations, colorFct);
         data[y * this.DIM.width + x] = 
           (255 << 24) |       // alpha
-          (value << 16) |     // blue
-          (value << 8) |      // green
-          value;              // red
+          (value.b << 16) |     // blue
+          (value.g << 8) |      // green
+          value.r;              // red
       }
     }
 
