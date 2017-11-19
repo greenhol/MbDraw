@@ -85,19 +85,19 @@ export function mapToColoredValueEvenBetter(value: number, iterations: number): 
         b = Math.round(-Math.cos((value-512)*Math.PI/255)*127+127);
     }
     if (v >= 768 && v < 1024) {
-        r = Math.round(-Math.cos((value-768)*Math.PI/255)*127+127);
+        r = Math.round(-Math.cos((value-512)*Math.PI/255)*127+127);
         g = 255;
-        g = 255;
+        b = 255;
     }
     if (v >= 1024 && v < 1280) {
         r = 0;
-        g = Math.round(-Math.cos((value-1024)*Math.PI/255)*127+127);
+        g = Math.round(-Math.cos((value-768)*Math.PI/255)*127+127);
         b = 255;
     }
     if (v >= 1280 && v < 1536) {
         r = 0;
         g = 0;
-        b = Math.round(-Math.cos((value-1280)*Math.PI/255)*127+127);
+        b = Math.round(-Math.cos((value-1024)*Math.PI/255)*127+127);
     }
     
     return {r: r, g: g, b: b}
