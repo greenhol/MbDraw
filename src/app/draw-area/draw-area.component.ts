@@ -1,14 +1,7 @@
 import { Component, ViewEncapsulation, OnInit, ElementRef, HostListener, ViewChild } from '@angular/core';
 import { saveAs } from 'file-saver';
-import {
-  ColorFct,
-  mapToLinearColorValue,
-  mapToSmoothPeriodicValue,
-  mapToColoredValue,
-  mapToColoredValueEvenBetter,
-  Color
-} from '../colorMaps';
 import { Dimension, DIMENSIONS, Resolution } from './../dimensions';
+import { ColorMap, Color } from 'app/data/color-map';
 
 export interface Complex {
   real: number;
@@ -36,14 +29,24 @@ const ZOOM_PERCENTAGE = 0.5;
 })
 export class DrawAreaComponent implements OnInit {
 
-  private readonly RES: Resolution = DIMENSIONS._16x10;
+  private readonly RES: Resolution = DIMENSIONS._16x9;
   private readonly DIM: Dimension = this.RES.s;
   private config: Config;
   private zRange: Complex;
+  private colorMap: ColorMap = new ColorMap(
+    [
+      {r: 0, g: 0, b: 0},
+      {r: 255, g: 0, b: 0},
+      {r: 255, g: 255, b: 0},
+      {r: 255, g: 255, b: 255},
+      {r: 255, g: 255, b: 0},
+      {r: 255, g: 0, b: 0},
+      {r: 0, g: 0, b: 0}      
+    ], 80);
 
   @ViewChild('canvasArea') private canvasArea;
 
-  private static isInMbMaybe(z: Complex, iterations: number, colorFct: ColorFct): Color {
+  private static isInMbMaybe(z: Complex, iterations: number, colorMap: ColorMap): Color {
 
     let z0r = z.real;
     let z0i = z.imag;
@@ -58,13 +61,13 @@ export class DrawAreaComponent implements OnInit {
       z1i += z.imag;
       abs = Math.sqrt(z1r*z1r + z1i*z1i);
       if (abs > 2) {
-        return colorFct(i, iterations);
+        return colorMap.getColor(i);
       } else {
         z0r = z1r;
         z0i = z1i;
       }
     }
-    return colorFct(0, iterations);
+    return colorMap.getColor(0);
   }
 
   public onMouseWheelChrome(event: any) {
@@ -115,14 +118,16 @@ export class DrawAreaComponent implements OnInit {
     this.canvasArea.nativeElement.width = this.DIM.width;
     this.canvasArea.nativeElement.height = this.DIM.height;
     this.calcAndDraw();
+    // for (let i = 0; i < 56; i++) {
+    //   const c = mapToColoredValueEvenBetter(i, 0);
+    //   console.log(i + ' ' + Math.ceil((i+1)/4) + ' r' + c.r + ' g' + c.g + ' b' + c.b);
+    // }
   }
 
   private calcAndDraw() {
     const ctx = this.canvasArea.nativeElement.getContext('2d');
     const imageData = ctx.getImageData(0, 0, this.DIM.width, this.DIM.height);
     const iterations = (this.config.zoomLevel < 2) ? 255 : 255 + this.config.zoomLevel * 32;
-    const colorFct = (iterations < 300) ? mapToLinearColorValue : mapToSmoothPeriodicValue;
-    // const colorFct = mapToColoredValueEvenBetter;    
 
     let buf = new ArrayBuffer(imageData.data.length);
     let buf8 = new Uint8ClampedArray(buf);
@@ -138,7 +143,7 @@ export class DrawAreaComponent implements OnInit {
       rowCnt++;      
       for (let x = 0; x < this.DIM.width; x++) {
         let z = this.pixelToMath({x: x, y: y});
-        let value = DrawAreaComponent.isInMbMaybe(z, iterations, colorFct);
+        let value = DrawAreaComponent.isInMbMaybe(z, iterations, this.colorMap);
         data[y * this.DIM.width + x] = 
           (255 << 24) |       // alpha
           (value.b << 16) |     // blue
