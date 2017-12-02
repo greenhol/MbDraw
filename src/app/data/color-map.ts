@@ -10,6 +10,7 @@ export class ColorMap {
     private _intervalSize: number;
     private _intervalCount: number;
     private _intervalsEnd: number;
+    private _shift: number;
 
     private static evaluateInterval(x1: number, x2: number, y1: number, y2: number): number[] {
         if (y1 == y2) {
@@ -24,10 +25,11 @@ export class ColorMap {
         return retval;
     }
 
-    constructor(colors: Color[], intervalSize: number) {
+    constructor(colors: Color[], intervalSize: number, shift?: number) {
         
         this._intervalSize = Math.round(intervalSize);
         this._intervalCount = colors.length - 1;
+        this._shift = shift ? shift : 0;
 
         if (this._intervalSize < 1 || this._intervalCount < 1) {
             throw new Error('intervalSize invalid');
@@ -54,6 +56,7 @@ export class ColorMap {
     }
 
     public getColor(iteration: number): Color {
+        iteration += this._shift;
         let index = iteration % this._intervalsEnd;
         return this._colors[index];
     }

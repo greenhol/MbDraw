@@ -23,4 +23,6 @@ Some simple rules:
 
 ## Sample
 
-![](./Screenshot.png "MbDraw")
+![](./Screenshot_01.png "MbDraw")
+![](./Screenshot_02.gif "MbDraw")
+![](./Screenshot_03.png "MbDraw")

@@ -33,16 +33,36 @@ export class DrawAreaComponent implements OnInit {
   private readonly DIM: Dimension = this.RES.s;
   private config: Config;
   private zRange: Complex;
+
   private colorMap: ColorMap = new ColorMap(
     [
       {r: 0, g: 0, b: 0},
-      {r: 255, g: 0, b: 0},
-      {r: 255, g: 255, b: 0},
       {r: 255, g: 255, b: 255},
-      {r: 255, g: 255, b: 0},
-      {r: 255, g: 0, b: 0},
-      {r: 0, g: 0, b: 0}      
-    ], 80);
+      {r: 0, g: 0, b: 0}    
+    ], 256);
+
+  // private colorMap: ColorMap = new ColorMap(
+  //   [
+  //     {r: 0, g: 0, b: 0},
+  //     {r: 255, g: 0, b: 0},
+  //     {r: 255, g: 255, b: 0},
+  //     {r: 255, g: 255, b: 255},
+  //     {r: 0, g: 255, b: 255},
+  //     {r: 0, g: 0, b: 255},
+  //     {r: 0, g: 255, b: 0},
+  //     {r: 0, g: 0, b: 0}    
+  //   ], 64);
+
+  // private colorMap: ColorMap = new ColorMap(
+  //   [
+  //     {r: 0, g: 0, b: 0},
+  //     {r: 255, g: 0, b: 0},
+  //     {r: 255, g: 255, b: 0},
+  //     {r: 255, g: 255, b: 255},
+  //     {r: 255, g: 255, b: 0},
+  //     {r: 255, g: 0, b: 0},
+  //     {r: 0, g: 0, b: 0}    
+  //   ], 128);
 
   @ViewChild('canvasArea') private canvasArea;
 
@@ -67,7 +87,7 @@ export class DrawAreaComponent implements OnInit {
         z0i = z1i;
       }
     }
-    return colorMap.getColor(0);
+    return { r: 0, g: 0, b: 0 };
   }
 
   public onMouseWheelChrome(event: any) {
