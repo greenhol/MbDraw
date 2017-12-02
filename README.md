@@ -18,10 +18,9 @@ Some simple rules:
 1. Mousewheel Up zoomes in
 2. Mousewheel Down zoomes out
 3. Mouseclick centeres
-4. For own implemenataions of coloring check `colorMaps.ts`
-5. Have fun!
+4. Have fun!
 
-## Sample
+## Samples
 
 ![](./Screenshot_01.png "MbDraw")
 ![](./Screenshot_02.gif "MbDraw")
