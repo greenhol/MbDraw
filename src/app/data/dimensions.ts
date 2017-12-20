@@ -1,4 +1,4 @@
-import {Complex} from './draw-area/draw-area.component';
+import {Complex} from '../components/draw-area/draw-area.component';
 
 export interface Ratio {
     _16x9: Resolution;

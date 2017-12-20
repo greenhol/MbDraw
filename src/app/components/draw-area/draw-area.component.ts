@@ -1,7 +1,7 @@
 import { Component, ViewEncapsulation, OnInit, ElementRef, HostListener, ViewChild } from '@angular/core';
 import { saveAs } from 'file-saver';
-import { Dimension, DIMENSIONS, Resolution } from './../dimensions';
-import { ColorMap, Color } from 'app/data/color-map';
+import { Dimension, DIMENSIONS, Resolution } from '../../data/dimensions';
+import { ColorMap, Color } from '../../data/color-map';
 
 export interface Complex {
   real: number;
@@ -29,17 +29,30 @@ const ZOOM_PERCENTAGE = 0.5;
 })
 export class DrawAreaComponent implements OnInit {
 
-  private readonly RES: Resolution = DIMENSIONS._16x9;
+  private readonly RES: Resolution = DIMENSIONS._16x10;
   private readonly DIM: Dimension = this.RES.s;
   private config: Config;
   private zRange: Complex;
+
+  // private colorMap: ColorMap;
 
   private colorMap: ColorMap = new ColorMap(
     [
       {r: 0, g: 0, b: 0},
       {r: 255, g: 255, b: 255},
-      {r: 0, g: 0, b: 0}    
+      {r: 0, g: 0, b: 0}
     ], 256);
+
+  // private colorMap: ColorMap = new ColorMap(
+  //   [
+  //     {r: 0, g: 0, b: 0},
+  //     {r: 128, g: 0, b: 0},
+  //     {r: 255, g: 64, b: 0},
+  //     {r: 255, g: 128, b: 0},
+  //     {r: 255, g: 64, b: 0},
+  //     {r: 128, g: 0, b: 0},
+  //     {r: 0, g: 0, b: 0}    
+  //   ], 64, 0*4);
 
   // private colorMap: ColorMap = new ColorMap(
   //   [
@@ -51,7 +64,7 @@ export class DrawAreaComponent implements OnInit {
   //     {r: 0, g: 0, b: 255},
   //     {r: 0, g: 255, b: 0},
   //     {r: 0, g: 0, b: 0}    
-  //   ], 64);
+  //   ], 32);
 
   // private colorMap: ColorMap = new ColorMap(
   //   [
@@ -121,6 +134,18 @@ export class DrawAreaComponent implements OnInit {
   }
 
   constructor(private element: ElementRef) {
+
+    // let colors: Color[] = [{r:0, g:0, b:0}];
+    // for (let i = 0; i < 20; i++) {
+    //   colors.push({
+    //     r: Math.round(Math.random()*256),
+    //     g: Math.round(Math.random()*256),
+    //     b: Math.round(Math.random()*256)
+    //   });
+    // }
+    // colors.push({r:0, g:0, b:0});
+    // this.colorMap = new ColorMap(colors, 128);
+
     let initialConfig: Config;
     try {
       initialConfig = JSON.parse(window.location.hash.substr(1));

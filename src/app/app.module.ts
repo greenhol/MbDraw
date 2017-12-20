@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { HttpModule } from '@angular/http';
 
 import { AppComponent } from './app.component';
-import { DrawAreaComponent } from './draw-area/draw-area.component';
+import { DrawAreaComponent } from './components/draw-area/draw-area.component';
 
 @NgModule({
   declarations: [
