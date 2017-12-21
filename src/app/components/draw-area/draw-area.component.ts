@@ -2,6 +2,7 @@ import { Component, ViewEncapsulation, OnInit, ElementRef, HostListener, ViewChi
 import { saveAs } from 'file-saver';
 import { Dimension, DIMENSIONS, Resolution } from '../../data/dimensions';
 import { ColorMap, Color } from '../../data/color-map';
+import { TouchEnum, TouchData } from '../../directives/touch-me.directive';
 
 export interface Complex {
   real: number;
@@ -103,36 +104,6 @@ export class DrawAreaComponent implements OnInit {
     return { r: 0, g: 0, b: 0 };
   }
 
-  public onMouseWheelChrome(event: any) {
-    const zoomIn = (event.deltaY < 0);
-    const factor = zoomIn ? ZOOM_PERCENTAGE : 1 / ZOOM_PERCENTAGE;
-    const newZoomLevel = zoomIn ? this.config.zoomLevel+1 : this.config.zoomLevel-1;
-    this.panZoom({ x: event.offsetX, y: event.offsetY }, factor, newZoomLevel);
-  }
-
-  public onPointerup(event: PointerEvent) {
-    // only left button
-    if (event.button === 0) {
-      this.panZoom({ x: event.offsetX, y: event.offsetY }, 1, this.config.zoomLevel);
-    } else if (event.button === 1) {
-      window.location.href = '/';
-    }
-  }
-
-  public onSaveButtonClick() {
-    this.canvasArea.nativeElement.toBlob((blob) => {
-      const filename = 'MB_zStart_r_' + this.config.zStart.real
-        + '_i_' + this.config.zStart.imag
-        + '_zEnd_r_' + this.config.zEnd.real
-        + '_i_' + this.config.zEnd.imag
-        + '_zoomLevel_' + this.config.zoomLevel
-        + '.png';
-
-      console.info('Saving as: ' + filename);
-      saveAs(blob, filename);
-    });
-  }
-
   constructor(private element: ElementRef) {
 
     // let colors: Color[] = [{r:0, g:0, b:0}];
@@ -169,6 +140,47 @@ export class DrawAreaComponent implements OnInit {
     // }
   }
 
+  public onMouseWheelChrome(event: any) {
+    const zoomIn = (event.deltaY < 0);
+    const center: Coordinate = { x: event.offsetX, y: event.offsetY };
+
+    if (zoomIn) this.zoomIn(center);
+    else this.zoomOut(center);
+  }
+
+  public onTouched(event: TouchData) {
+    console.log('event ', event);
+    switch (event.type) {
+      case TouchEnum.SINGLE_TAP: 
+        this.panZoom({ x: event.offsetX, y: event.offsetY }, 1, this.config.zoomLevel);
+        break;
+      case TouchEnum.DOUBLE_TAP:
+        this.zoomIn({x: event.offsetX, y: event.offsetY});
+        break;
+      case TouchEnum.LONG_TAP:
+        this.zoomOut({x: event.offsetX, y: event.offsetY});
+        break;
+    }
+  }
+
+  public onSaveButtonClick() {
+    this.canvasArea.nativeElement.toBlob((blob) => {
+      const filename = 'MB_zStart_r_' + this.config.zStart.real
+        + '_i_' + this.config.zStart.imag
+        + '_zEnd_r_' + this.config.zEnd.real
+        + '_i_' + this.config.zEnd.imag
+        + '_zoomLevel_' + this.config.zoomLevel
+        + '.png';
+
+      console.info('Saving as: ' + filename);
+      saveAs(blob, filename);
+    });
+  }
+
+  public onResetButtonClick() {
+    window.location.href = window.location.pathname;
+  }
+
   private calcAndDraw() {
     const ctx = this.canvasArea.nativeElement.getContext('2d');
     const imageData = ctx.getImageData(0, 0, this.DIM.width, this.DIM.height);
@@ -199,6 +211,14 @@ export class DrawAreaComponent implements OnInit {
 
     imageData.data.set(buf8);
     ctx.putImageData(imageData, 0, 0);  
+  }
+
+  private zoomIn(center: Coordinate) {
+    this.panZoom(center, ZOOM_PERCENTAGE, this.config.zoomLevel+1);
+  }
+
+  private zoomOut(center: Coordinate) {
+    this.panZoom(center, 1 / ZOOM_PERCENTAGE, this.config.zoomLevel-1);
   }
 
   private panZoom(center: Coordinate, factor: number, zoomLevel: number) {

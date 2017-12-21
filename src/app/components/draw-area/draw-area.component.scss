@@ -2,9 +2,14 @@
     border: 1px solid black;
 }
 
+.buttonArea {
+    display: flex;
+}
+
 .button {
     width: 100px;
     padding: 5px 20px;
+    margin-right: 5px;
     text-align: center;
     background-color: lightgray;
     border: 1px solid black;

@@ -5,11 +5,13 @@ import { HttpModule } from '@angular/http';
 
 import { AppComponent } from './app.component';
 import { DrawAreaComponent } from './components/draw-area/draw-area.component';
+import { TouchMeDirective } from './directives/touch-me.directive';
 
 @NgModule({
   declarations: [
     AppComponent,
-    DrawAreaComponent
+    DrawAreaComponent,
+    TouchMeDirective
   ],
   imports: [
     BrowserModule,

@@ -1,6 +1,9 @@
 <canvas class="canvasArea" 
         #canvasArea
-        (mousewheel)="onMouseWheelChrome($event)"
-        (pointerup)="onPointerup($event)">
+        (mbTouchMe)="onTouched($event)"
+        (mousewheel)="onMouseWheelChrome($event)">
 </canvas>
-<div class="button" (click)="onSaveButtonClick()">Download</div>
+<div class="buttonArea">
+        <div class="button" (click)="onSaveButtonClick()">Download</div>
+        <div class="button" (click)="onResetButtonClick()">Reset</div>
+</div>
