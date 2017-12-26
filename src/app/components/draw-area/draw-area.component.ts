@@ -12,7 +12,7 @@ export interface Complex {
 interface Config {
   zStart: Complex;
   zEnd: Complex;
-  zoomLevel: number;
+  iterations: number;
 }
 
 interface Coordinate {
@@ -124,10 +124,10 @@ export class DrawAreaComponent implements OnInit {
       initialConfig = {
         zStart: this.RES.zStart,
         zEnd: this.RES.zEnd,
-        zoomLevel: 1
+        iterations: 255
       };
     }
-    this.setPlane(initialConfig.zStart, initialConfig.zEnd, initialConfig.zoomLevel);
+    this.setPlane(initialConfig.zStart, initialConfig.zEnd, initialConfig.iterations);
   }
 
   ngOnInit() {
@@ -152,7 +152,7 @@ export class DrawAreaComponent implements OnInit {
     console.log('event ', event);
     switch (event.type) {
       case TouchEnum.SINGLE_TAP: 
-        this.panZoom({ x: event.offsetX, y: event.offsetY }, 1, this.config.zoomLevel);
+        this.panZoom({ x: event.offsetX, y: event.offsetY }, 1, this.config.iterations);
         break;
       case TouchEnum.DOUBLE_TAP:
         this.zoomIn({x: event.offsetX, y: event.offsetY});
@@ -169,7 +169,7 @@ export class DrawAreaComponent implements OnInit {
         + '_i_' + this.config.zStart.imag
         + '_zEnd_r_' + this.config.zEnd.real
         + '_i_' + this.config.zEnd.imag
-        + '_zoomLevel_' + this.config.zoomLevel
+        + '_iterations_' + this.config.iterations
         + '.png';
 
       console.info('Saving as: ' + filename);
@@ -184,7 +184,6 @@ export class DrawAreaComponent implements OnInit {
   private calcAndDraw() {
     const ctx = this.canvasArea.nativeElement.getContext('2d');
     const imageData = ctx.getImageData(0, 0, this.DIM.width, this.DIM.height);
-    const iterations = (this.config.zoomLevel < 2) ? 255 : 255 + this.config.zoomLevel * 32;
 
     let buf = new ArrayBuffer(imageData.data.length);
     let buf8 = new Uint8ClampedArray(buf);
@@ -200,7 +199,7 @@ export class DrawAreaComponent implements OnInit {
       rowCnt++;      
       for (let x = 0; x < this.DIM.width; x++) {
         let z = this.pixelToMath({x: x, y: y});
-        let value = DrawAreaComponent.isInMbMaybe(z, iterations, this.colorMap);
+        let value = DrawAreaComponent.isInMbMaybe(z, this.config.iterations, this.colorMap);
         data[y * this.DIM.width + x] = 
           (255 << 24) |       // alpha
           (value.b << 16) |     // blue
@@ -214,11 +213,11 @@ export class DrawAreaComponent implements OnInit {
   }
 
   private zoomIn(center: Coordinate) {
-    this.panZoom(center, ZOOM_PERCENTAGE, this.config.zoomLevel+1);
+    this.panZoom(center, ZOOM_PERCENTAGE, this.config.iterations += 32);
   }
 
   private zoomOut(center: Coordinate) {
-    this.panZoom(center, 1 / ZOOM_PERCENTAGE, this.config.zoomLevel-1);
+    this.panZoom(center, 1 / ZOOM_PERCENTAGE, (this.config.iterations - 32 < 255) ? this.config.iterations -= 0 : this.config.iterations -= 32);
   }
 
   private panZoom(center: Coordinate, factor: number, zoomLevel: number) {
@@ -236,11 +235,11 @@ export class DrawAreaComponent implements OnInit {
     this.calcAndDraw();
   }
 
-  private setPlane(zStart: Complex, zEnd: Complex, zoomLevel: number) {
+  private setPlane(zStart: Complex, zEnd: Complex, iterations: number) {
     this.config =  {
       zStart: zStart,
       zEnd: zEnd,
-      zoomLevel: zoomLevel
+      iterations: iterations
     }
     this.zRange = {
       real: zEnd.real - zStart.real,
@@ -253,7 +252,7 @@ export class DrawAreaComponent implements OnInit {
     const newConfig: Config = {
       zStart: this.config.zStart,
       zEnd: this.config.zEnd,
-      zoomLevel: this.config.zoomLevel
+      iterations: this.config.iterations
     }
     window.location.hash = JSON.stringify(newConfig);
   }
