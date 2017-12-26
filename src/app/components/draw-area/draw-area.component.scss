@@ -6,11 +6,14 @@
     display: flex;
 }
 
-.button {
-    width: 100px;
-    padding: 5px 20px;
-    margin-right: 5px;
-    text-align: center;
+.control {
+    width: 100px;    
     background-color: lightgray;
     border: 1px solid black;
+    margin-right: 5px;
+    text-align: center;
+}
+
+.button {
+    padding: 5px 20px;
 }

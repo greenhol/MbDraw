@@ -4,6 +4,12 @@
         (mousewheel)="onMouseWheelChrome($event)">
 </canvas>
 <div class="buttonArea">
-        <div class="button" (click)="onSaveButtonClick()">Download</div>
-        <div class="button" (click)="onResetButtonClick()">Reset</div>
+        <div class="control button" (click)="onSaveButtonClick()">Download</div>
+        <div class="control button" (click)="onResetButtonClick()">Reset</div>
+        <select class="control" [(ngModel)]="ratio" (ngModelChange)="onRatioChange($event)">
+                <option *ngFor="let ratio of ratios" [ngValue]="ratio">{{ratio.displayName}}</option>
+        </select>
+        <select class="control" [(ngModel)]="resolution" (ngModelChange)="onResolutionChange($event)">
+                <option *ngFor="let resolution of resolutions" [ngValue]="resolution">{{resolution.displayName}}</option>
+        </select>
 </div>

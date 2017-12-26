@@ -1,6 +1,6 @@
 import { Component, ViewEncapsulation, OnInit, ElementRef, HostListener, ViewChild } from '@angular/core';
 import { saveAs } from 'file-saver';
-import { Dimension, DIMENSIONS, Resolution } from '../../data/dimensions';
+import { RATIOS, Ratio, Resolution, RatioSelector, ResolutionSelector, RESOLUTIONS } from '../../data/dimensions';
 import { ColorMap, Color } from '../../data/color-map';
 import { TouchEnum, TouchData } from '../../directives/touch-me.directive';
 
@@ -10,6 +10,8 @@ export interface Complex {
 }
 
 interface Config {
+  ratioId: string;
+  resolutionId: string;
   zStart: Complex;
   zEnd: Complex;
   iterations: number;
@@ -30,8 +32,11 @@ const ZOOM_PERCENTAGE = 0.5;
 })
 export class DrawAreaComponent implements OnInit {
 
-  private readonly RES: Resolution = DIMENSIONS._16x10;
-  private readonly DIM: Dimension = this.RES.s;
+  public ratios = RATIOS;
+  public ratio: RatioSelector;
+  public resolutions = RESOLUTIONS
+  public resolution: ResolutionSelector;
+
   private config: Config;
   private zRange: Complex;
 
@@ -104,6 +109,24 @@ export class DrawAreaComponent implements OnInit {
     return { r: 0, g: 0, b: 0 };
   }
 
+  private static complexCenter(z1: Complex, z2: Complex): Complex {
+    return {
+      real: (z1.real + z2.real) / 2,
+      imag: (z1.imag + z2.imag) / 2,
+    }
+  }
+
+  private static complexRange(z1: Complex, z2: Complex): Complex {
+    return {
+      real: Math.abs(z1.real - z2.real),
+      imag: Math.abs(z1.imag - z2.imag)
+    }
+  }
+
+  private get size(): Resolution {
+    return this.ratio.ratio[this.resolution.id];
+  }
+
   constructor(private element: ElementRef) {
 
     // let colors: Color[] = [{r:0, g:0, b:0}];
@@ -122,17 +145,21 @@ export class DrawAreaComponent implements OnInit {
       initialConfig = JSON.parse(window.location.hash.substr(1));
     } catch (error) {
       initialConfig = {
-        zStart: this.RES.zStart,
-        zEnd: this.RES.zEnd,
+        ratioId: '16x9',
+        resolutionId: 's',
+        zStart: RATIOS[0].ratio.zStart,
+        zEnd: RATIOS[0].ratio.zEnd,
         iterations: 255
       };
     }
+    this.ratio = RATIOS.find((value: RatioSelector): boolean => value.id === initialConfig.ratioId);
+    this.resolution = RESOLUTIONS.find((value: ResolutionSelector): boolean => value.id === initialConfig.resolutionId);
     this.setPlane(initialConfig.zStart, initialConfig.zEnd, initialConfig.iterations);
   }
 
   ngOnInit() {
-    this.canvasArea.nativeElement.width = this.DIM.width;
-    this.canvasArea.nativeElement.height = this.DIM.height;
+    this.canvasArea.nativeElement.width = this.size.width;
+    this.canvasArea.nativeElement.height = this.size.height;
     this.calcAndDraw();
     // for (let i = 0; i < 56; i++) {
     //   const c = mapToColoredValueEvenBetter(i, 0);
@@ -181,9 +208,37 @@ export class DrawAreaComponent implements OnInit {
     window.location.href = window.location.pathname;
   }
 
+  public onRatioChange(newRatio: RatioSelector) {
+    console.log('new ratio: ', this.ratio);
+    this.config.ratioId = newRatio.id;
+    
+    const center = DrawAreaComponent.complexCenter(this.config.zStart, this.config.zEnd);
+    const range = DrawAreaComponent.complexRange(this.config.zStart, this.config.zEnd);
+    const distPerFactor = range.imag / newRatio.ratio.factorHeight;
+
+    this.config.zStart = {
+      real: center.real - distPerFactor * newRatio.ratio.factorWidth / 2,
+      imag: this.config.zStart.imag
+    };
+    this.config.zEnd = {
+      real: center.real + distPerFactor * newRatio.ratio.factorWidth / 2,
+      imag: this.config.zEnd.imag
+    };
+    
+    this.persistConfig();
+    window.location.reload();
+  }
+
+  public onResolutionChange(newResolution: ResolutionSelector) {
+    console.log('new resolution: ', this.resolution);
+    this.config.resolutionId = newResolution.id;
+    this.persistConfig();
+    window.location.reload();
+  }
+
   private calcAndDraw() {
     const ctx = this.canvasArea.nativeElement.getContext('2d');
-    const imageData = ctx.getImageData(0, 0, this.DIM.width, this.DIM.height);
+    const imageData = ctx.getImageData(0, 0, this.size.width, this.size.height);
 
     let buf = new ArrayBuffer(imageData.data.length);
     let buf8 = new Uint8ClampedArray(buf);
@@ -191,16 +246,16 @@ export class DrawAreaComponent implements OnInit {
     let rowCnt = 0;
 
     console.clear();
-    for (let y = 0; y < this.DIM.height; y++) {
+    for (let y = 0; y < this.size.height; y++) {
       if (rowCnt > 99) {
-        console.info('calculating: ' + Math.round(100*y/this.DIM.height) + '%');
+        console.info('calculating: ' + Math.round(100 * y / this.size.height) + '%');
         rowCnt = 0;
       }
       rowCnt++;      
-      for (let x = 0; x < this.DIM.width; x++) {
+      for (let x = 0; x < this.size.width; x++) {
         let z = this.pixelToMath({x: x, y: y});
         let value = DrawAreaComponent.isInMbMaybe(z, this.config.iterations, this.colorMap);
-        data[y * this.DIM.width + x] = 
+        data[y * this.size.width + x] = 
           (255 << 24) |       // alpha
           (value.b << 16) |     // blue
           (value.g << 8) |      // green
@@ -221,8 +276,8 @@ export class DrawAreaComponent implements OnInit {
   }
 
   private panZoom(center: Coordinate, factor: number, zoomLevel: number) {
-    const diffX = factor * this.DIM.width / 2;
-    const diffY = factor * this.DIM.height / 2;
+    const diffX = factor * this.size.width / 2;
+    const diffY = factor * this.size.height / 2;
     const coord1: Coordinate = {
       x: center.x - diffX,
       y: center.y + diffY
@@ -237,6 +292,8 @@ export class DrawAreaComponent implements OnInit {
 
   private setPlane(zStart: Complex, zEnd: Complex, iterations: number) {
     this.config =  {
+      ratioId: this.ratio.id,
+      resolutionId: this.resolution.id,
       zStart: zStart,
       zEnd: zEnd,
       iterations: iterations
@@ -245,11 +302,13 @@ export class DrawAreaComponent implements OnInit {
       real: zEnd.real - zStart.real,
       imag: zEnd.imag - zStart.imag
     }
-    this.setConfig();
+    this.persistConfig();
   }
 
-  private setConfig() {
+  private persistConfig() {
     const newConfig: Config = {
+      ratioId: this.ratio.id,
+      resolutionId: this.resolution.id,
       zStart: this.config.zStart,
       zEnd: this.config.zEnd,
       iterations: this.config.iterations
@@ -259,8 +318,8 @@ export class DrawAreaComponent implements OnInit {
 
   private pixelToMath(coordinate: Coordinate): Complex {
     return {
-      real: this.zRange.real * coordinate.x / this.DIM.width + this.config.zStart.real,
-      imag: this.config.zEnd.imag - this.zRange.imag * coordinate.y / this.DIM.height
+      real: this.zRange.real * coordinate.x / this.size.width + this.config.zStart.real,
+      imag: this.config.zEnd.imag - this.zRange.imag * coordinate.y / this.size.height
     }
   }
 }
