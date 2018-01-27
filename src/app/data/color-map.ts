@@ -4,13 +4,18 @@ export interface Color {
     b: number;
 }
 
+export interface ColorMapConfig {
+    colorSteps: Color[];
+    intervalSize: number;
+    offset: number;
+}
+
 export class ColorMap {
 
+    private _config: ColorMapConfig;
     private _colors: Color[] = [];
-    private _intervalSize: number;
     private _intervalCount: number;
     private _intervalsEnd: number;
-    private _shift: number;
 
     private static evaluateInterval(x1: number, x2: number, y1: number, y2: number): number[] {
         if (y1 == y2) {
@@ -25,25 +30,30 @@ export class ColorMap {
         return retval;
     }
 
-    constructor(colors: Color[], intervalSize: number, shift?: number) {
-        
-        this._intervalSize = Math.round(intervalSize);
-        this._intervalCount = colors.length - 1;
-        this._shift = shift ? shift : 0;
+    private static pad(num, size) {
+        var s = '' + num;
+        while (s.length < size) s = '0' + s;
+        return s;
+    }
 
-        if (this._intervalSize < 1 || this._intervalCount < 1) {
+    constructor(config: ColorMapConfig) {
+
+        this._config = config;
+        this._intervalCount = this._config.colorSteps.length - 1;
+
+        if (this._config.intervalSize < 1 || this._intervalCount < 1) {
             throw new Error('intervalSize invalid');
         }
 
-        this._intervalsEnd = this._intervalCount * this._intervalSize;
+        this._intervalsEnd = this._intervalCount * this._config.intervalSize;
 
-        for (let i = 0; i < colors.length-1; i++) {
-            const color1 = colors[i];
-            const color2 = colors[i+1];
+        for (let i = 0; i < this._config.colorSteps.length-1; i++) {
+            const color1 = this._config.colorSteps[i];
+            const color2 = this._config.colorSteps[i+1];
 
-            let redValues = ColorMap.evaluateInterval(i*this._intervalSize, (i+1)*this._intervalSize, color1.r, color2.r);
-            let greenValues = ColorMap.evaluateInterval(i*this._intervalSize, (i+1)*this._intervalSize, color1.g, color2.g);
-            let blueValues = ColorMap.evaluateInterval(i*this._intervalSize, (i+1)*this._intervalSize, color1.b, color2.b);
+            let redValues = ColorMap.evaluateInterval(i*this._config.intervalSize, (i+1)*this._config.intervalSize, color1.r, color2.r);
+            let greenValues = ColorMap.evaluateInterval(i*this._config.intervalSize, (i+1)*this._config.intervalSize, color1.g, color2.g);
+            let blueValues = ColorMap.evaluateInterval(i*this._config.intervalSize, (i+1)*this._config.intervalSize, color1.b, color2.b);
             
             for (let j = 0; j < redValues.length; j++) {
                 this._colors.push({
@@ -55,8 +65,24 @@ export class ColorMap {
         }
     }
 
+    public get config(): ColorMapConfig {
+        return this._config;
+    }
+
+    public get configAsString(): string {
+        let configString = '';
+        // for (let i = 0; i < this._config.colorSteps.length; i++) {
+        //     configString += 'C' + (i+1) + '_R' + this._config.colorSteps[i].r + '_G' + this._config.colorSteps[i].g + '_B' + this._config.colorSteps[i].b;
+        // }
+        // configString += '_intervalSize_' + this._config.intervalSize;
+        let digits = ('' + this._colors.length).length;
+        configString += '_Offset_' + ColorMap.pad(this._config.offset, digits);
+        return configString;
+    }
+
     public getColor(iteration: number): Color {
-        iteration += this._shift;
+        if (iteration === Infinity) return { r: 0, g: 0, b: 0 };
+        iteration += this._config.offset;
         let index = iteration % this._intervalsEnd;
         return this._colors[index];
     }
@@ -68,7 +94,7 @@ export class ColorMap {
             if (cnt == 0) console.log('INTERVAL ' + (intervalNo++));
             console.log(color);
             cnt++;
-            cnt = cnt % this._intervalSize;
+            cnt = cnt % this._config.intervalSize;
         });
     }
 

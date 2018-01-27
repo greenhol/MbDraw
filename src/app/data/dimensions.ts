@@ -43,8 +43,8 @@ const ALLRATIOS: Ratios = {
         xs: { width: 800, height: 450 },
         s: { width: 1280, height: 720 },
         m: { width: 1920, height: 1080 },
-        l: { width: 4800, height: 2700 },
-        xl: { width: 9600, height: 5400 },
+        l: { width: 3840, height: 2160 },
+        xl: { width: 7680, height: 4320 }
     },
     _16x10: {
         factorWidth: 16,
@@ -54,8 +54,8 @@ const ALLRATIOS: Ratios = {
         xs: { width: 800, height: 500 },
         s: { width: 1280, height: 800 },
         m: { width: 1920, height: 1200 },
-        l: { width: 4800, height: 3000 },
-        xl: { width: 9600, height: 6000 },
+        l: { width: 3840, height: 2400 },
+        xl: { width: 7680, height: 4800 },
     },
     _48x10: {
         factorWidth: 48,
