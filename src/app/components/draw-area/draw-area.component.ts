@@ -43,52 +43,23 @@ export class DrawAreaComponent implements OnInit {
   private data: number[];
   private colorMap: ColorMap;
   private colorMapConfigDefault: ColorMapConfig = {
-    colorSteps: [
-      {r: 0, g: 0, b: 0},
-      {r: 255, g: 255, b: 255},
-      {r: 0, g: 0, b: 0}
-    ],
+    colorSteps: ['#000000','#FFFFFF','#000000'],
     intervalSize: 256,
     offset: 0
   };
 
   private colorMapConfigSample1: ColorMapConfig = {
-    colorSteps: [
-      {r: 0, g: 0, b: 0},
-      {r: 128, g: 0, b: 0},
-      {r: 255, g: 64, b: 0},
-      {r: 255, g: 128, b: 0},
-      {r: 255, g: 64, b: 0},
-      {r: 128, g: 0, b: 0},
-      {r: 0, g: 0, b: 0}   
-    ],
+    colorSteps: ['#000000', '#800000', '#FF4000', '#FF8000', 'FF4000', '#800000', '#000000'],
     intervalSize: 64,
     offset: 0
   };
   private colorMapConfigSample2: ColorMapConfig = {
-    colorSteps: [
-      {r: 0, g: 0, b: 0},
-      {r: 255, g: 0, b: 0},
-      {r: 255, g: 255, b: 0},
-      {r: 255, g: 255, b: 255},
-      {r: 0, g: 255, b: 255},
-      {r: 0, g: 0, b: 255},
-      {r: 0, g: 255, b: 0},
-      {r: 0, g: 0, b: 0}    
-    ],
+    colorSteps: ['#000000', '#FF0000', '#FFFF00', '#FFFFFF', '00FFFF', '#0000FF', '#00FF00', '#000000'],
     intervalSize: 32,
     offset: 0
   };
   private colorMapConfigSample3: ColorMapConfig = {
-    colorSteps: [
-      {r: 0, g: 0, b: 0},
-      {r: 255, g: 0, b: 0},
-      {r: 255, g: 255, b: 0},
-      {r: 255, g: 255, b: 255},
-      {r: 255, g: 255, b: 0},
-      {r: 255, g: 0, b: 0},
-      {r: 0, g: 0, b: 0}    
-    ],
+    colorSteps: ['#000000', '#FF0000', '#FFFF00', '#FFFFFF', 'FFFF00', '#FF0000', '#000000'],
     intervalSize: 128,
     offset: 0
   };
@@ -154,7 +125,7 @@ export class DrawAreaComponent implements OnInit {
     }
     this.ratio = RATIOS.find((value: RatioSelector): boolean => value.id === initialConfig.ratioId);
     this.resolution = RESOLUTIONS.find((value: ResolutionSelector): boolean => value.id === initialConfig.resolutionId);
-    this.colorMap = new ColorMap(initialConfig.colorMapConfig);
+    this.colorMap = new ColorMap(initialConfig.colorMapConfig);    
     this.setPlane(initialConfig.zStart, initialConfig.zEnd, initialConfig.iterations);
   }
 

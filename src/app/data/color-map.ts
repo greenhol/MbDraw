@@ -5,12 +5,21 @@ export interface Color {
 }
 
 export interface ColorMapConfig {
-    colorSteps: Color[];
+    colorSteps: string[];
     intervalSize: number;
     offset: number;
 }
 
 export class ColorMap {
+
+    private static hexToRgb(hex): Color | null {
+        var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+        return result ? {
+            r: parseInt(result[1], 16),
+            g: parseInt(result[2], 16),
+            b: parseInt(result[3], 16)
+        } : null;
+    }
 
     private _config: ColorMapConfig;
     private _colors: Color[] = [];
@@ -41,15 +50,16 @@ export class ColorMap {
         this._config = config;
         this._intervalCount = this._config.colorSteps.length - 1;
 
-        if (this._config.intervalSize < 1 || this._intervalCount < 1) {
-            throw new Error('intervalSize invalid');
-        }
+        if (this._config.intervalSize < 1) throw new Error('intervalSize invalid (needs to be > 0)');
+        if (this._intervalCount < 1) throw new Error('number of color steps invalid (needs to be > 1)');
 
         this._intervalsEnd = this._intervalCount * this._config.intervalSize;
 
         for (let i = 0; i < this._config.colorSteps.length-1; i++) {
-            const color1 = this._config.colorSteps[i];
-            const color2 = this._config.colorSteps[i+1];
+            const color1: Color = ColorMap.hexToRgb(this._config.colorSteps[i]);
+            const color2: Color = ColorMap.hexToRgb(this._config.colorSteps[i+1]);
+
+            if (color1 === null || color2 === null) throw new Error('ColorMap-Config invalid');
 
             let redValues = ColorMap.evaluateInterval(i*this._config.intervalSize, (i+1)*this._config.intervalSize, color1.r, color2.r);
             let greenValues = ColorMap.evaluateInterval(i*this._config.intervalSize, (i+1)*this._config.intervalSize, color1.g, color2.g);
@@ -71,10 +81,10 @@ export class ColorMap {
 
     public get configAsString(): string {
         let configString = '';
-        // for (let i = 0; i < this._config.colorSteps.length; i++) {
-        //     configString += 'C' + (i+1) + '_R' + this._config.colorSteps[i].r + '_G' + this._config.colorSteps[i].g + '_B' + this._config.colorSteps[i].b;
-        // }
-        // configString += '_intervalSize_' + this._config.intervalSize;
+        for (let i = 0; i < this._config.colorSteps.length; i++) {
+            configString += 'C' + (i+1) + this._config.colorSteps[i];
+        }
+        configString += '_intervalSize_' + this._config.intervalSize;
         let digits = ('' + this._colors.length).length;
         configString += '_Offset_' + ColorMap.pad(this._config.offset, digits);
         return configString;
