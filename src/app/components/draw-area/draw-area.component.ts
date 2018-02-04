@@ -165,7 +165,7 @@ export class DrawAreaComponent implements OnInit {
         + '_zEnd_r_' + this.config.zEnd.real
         + '_i_' + this.config.zEnd.imag
         + '_iterations_' + this.config.iterations
-        + '_colorMapConfig_' + this.colorMap.configAsString
+        // + '_colorMapConfig_' + this.colorMap.configAsString
         + '.png';
 
       console.info('Saving as: ' + filename);
@@ -250,7 +250,7 @@ export class DrawAreaComponent implements OnInit {
     
   }
 
-  // Experimental separationg calculation and drawing (memory issue)
+  // // Experimental separationg calculation and drawing (memory issue)
   // private calcAndDraw() {
   //   this.data = this.calc();
   //   console.log('CALC DONE')
@@ -268,7 +268,7 @@ export class DrawAreaComponent implements OnInit {
   //           this.colorMap = new ColorMap(this.config.colorMapConfig);
   //         }, 1000);
   //       }
-  //     }, 5000);
+  //     }, 10000);
   //   }, 5000);
   // }
 
@@ -284,7 +284,7 @@ export class DrawAreaComponent implements OnInit {
   //     rowCnt++;
   //     for (let x = 0; x < this.size.width; x++) {
   //       let z = this.pixelToMath({x: x, y: y});
-  //       data.push(DrawAreaComponent.isInMbMaybeNew(z, this.config.iterations));
+  //       data.push(DrawAreaComponent.isInMbMaybe(z, this.config.iterations));
   //     }
   //   }
   //   return data;
