@@ -18,3 +18,15 @@
 .button {
     padding: 5px 20px;
 }
+
+.busy-indicator {
+    width: 12px;
+    height: 24px;
+    background-color: green;
+    border: 1px solid black;
+    margin-right: 4px;
+}
+
+.busy-indicator--busy {
+    background-color: red;
+}

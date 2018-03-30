@@ -1,4 +1,5 @@
 <div class="buttonArea">
+        <div class="busy-indicator" [class.busy-indicator--busy]="busy" (click)="onSaveButtonClick()"></div>
         <div class="control button" (click)="onSaveButtonClick()">Download</div>
         <div class="control button" (click)="onResetButtonClick()">Reset</div>
         <select class="control" [(ngModel)]="ratio" (ngModelChange)="onRatioChange($event)">

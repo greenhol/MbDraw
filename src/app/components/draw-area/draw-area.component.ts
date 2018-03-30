@@ -1,4 +1,5 @@
 import { Component, ViewEncapsulation, OnInit, ElementRef, HostListener, ViewChild } from '@angular/core';
+import { timer } from 'rxjs/observable/timer';
 import { saveAs } from 'file-saver';
 import { RATIOS, Ratio, Resolution, RatioSelector, ResolutionSelector, RESOLUTIONS } from '../../data/dimensions';
 import { ColorMap, Color, ColorMapConfig } from '../../data/color-map';
@@ -37,6 +38,7 @@ export class DrawAreaComponent implements OnInit {
   public ratio: RatioSelector;
   public resolutions = RESOLUTIONS
   public resolution: ResolutionSelector;
+  public busy = true;
 
   private config: Config;
   private zRange: Complex;
@@ -112,8 +114,9 @@ export class DrawAreaComponent implements OnInit {
 
     let initialConfig: Config;
     try {
-      initialConfig = JSON.parse(window.location.hash.substr(1));
+      initialConfig = JSON.parse(decodeURI(window.location.hash.substr(1)));
     } catch (error) {
+      console.error(`Could not evaluate location.hash ${window.location.hash.substr(1)}`, error);
       initialConfig = {
         ratioId: '16x9',
         resolutionId: 's',
@@ -205,8 +208,18 @@ export class DrawAreaComponent implements OnInit {
     window.location.reload();
   }
 
-  private calcAndDraw() {
+  private async setBusy(value: boolean) {
+    return new Promise((resolve) => {
+      this.busy = value;
+      timer(value ? 100 : 0).subscribe(() => {
+        resolve();
+      })
+    })
+  }
 
+  private async calcAndDraw() {
+    await this.setBusy(true);
+    console.log('bla');
     const ctx = this.canvasArea.nativeElement.getContext('2d');
     const imageData = ctx.getImageData(0, 0, this.size.width, this.size.height);
 
@@ -235,6 +248,7 @@ export class DrawAreaComponent implements OnInit {
 
     imageData.data.set(buf8);
     ctx.putImageData(imageData, 0, 0);
+    await this.setBusy(false);
 
     // Experimental for Color Shifting
     // setTimeout(() => {
@@ -246,8 +260,7 @@ export class DrawAreaComponent implements OnInit {
     //     this.persistConfig();
     //     window.location.reload();        
     //   }
-    // }, 2000);
-    
+    // }, 2000);  
   }
 
   // // Experimental separationg calculation and drawing (memory issue)
@@ -366,7 +379,7 @@ export class DrawAreaComponent implements OnInit {
       iterations: this.config.iterations,
       colorMapConfig: this.colorMap.config
     }
-    window.location.hash = JSON.stringify(newConfig);
+    window.location.hash = encodeURI(JSON.stringify(newConfig));
   }
 
   private pixelToMath(coordinate: Coordinate): Complex {
