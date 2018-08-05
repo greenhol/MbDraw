@@ -1,5 +1,5 @@
 import { Component, ViewEncapsulation, OnInit, ElementRef, HostListener, ViewChild } from '@angular/core';
-import { timer } from 'rxjs/observable/timer';
+import { timer } from 'rxjs';
 import { saveAs } from 'file-saver';
 import { RATIOS, Ratio, Resolution, RatioSelector, ResolutionSelector, RESOLUTIONS } from '../../data/dimensions';
 import { ColorMap, Color, ColorMapConfig } from '../../data/color-map';
